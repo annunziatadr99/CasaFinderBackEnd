@@ -1,0 +1,136 @@
+package com.example.CasaFinderBackEnd.controller;
+
+import com.example.CasaFinderBackEnd.enumerated.PropertyType;
+import com.example.CasaFinderBackEnd.model.Property;
+import com.example.CasaFinderBackEnd.model.User;
+import com.example.CasaFinderBackEnd.service.CloudinaryService;
+import com.example.CasaFinderBackEnd.service.PropertyService;
+import com.example.CasaFinderBackEnd.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/properties")
+public class PropertyController {
+
+    @Autowired
+    private PropertyService propertyService;
+
+    @Autowired
+    private CloudinaryService cloudinaryService;
+
+    @Autowired
+    private UserService userService;
+
+    @PostMapping(consumes = {"multipart/form-data"})
+    public ResponseEntity<Property> createProperty(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("userId") Long userId,
+            @RequestParam("titolo") String titolo,
+            @RequestParam("prezzo") Double prezzo,
+            @RequestParam("tipo") PropertyType tipo,
+            @RequestParam("indirizzo") String indirizzo,
+            @RequestParam("descrizione") String descrizione,
+            @RequestParam("superficie") Double superficie,
+            @RequestParam("numeroBagni") int numeroBagni,
+            @RequestParam("numeroBalconi") int numeroBalconi,
+            @RequestParam("zona") String zona // Nuovo parametro
+    ) throws IOException {
+        try {
+            User user = userService.getUserById(userId);
+            Property property = new Property();
+            property.setUser(user);
+            property.setTitolo(titolo);
+            property.setPrezzo(prezzo);
+            property.setTipo(tipo);
+            property.setIndirizzo(indirizzo);
+            property.setDescrizione(descrizione);
+            property.setSuperficie(superficie);
+            property.setNumeroBagni(numeroBagni);
+            property.setNumeroBalconi(numeroBalconi);
+            property.setZona(zona); // Setta la nuova zona
+
+            String imageUrl = cloudinaryService.uploadImage(file);
+            property.setImageUrl(imageUrl);
+
+            Property savedProperty = propertyService.saveProperty(property);
+            return ResponseEntity.ok(savedProperty);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+    @GetMapping
+    public ResponseEntity<Page<Property>> getAllProperties(Pageable pageable) {
+        Page<Property> properties = propertyService.getAllProperties(pageable);
+        return ResponseEntity.ok(properties);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Property> getPropertyById(@PathVariable Long id) {
+        Property property = propertyService.getPropertyById(id);
+        return ResponseEntity.ok(property);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Property> updateProperty(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("titolo") String titolo,
+            @RequestParam("prezzo") Double prezzo,
+            @RequestParam("tipo") PropertyType tipo,
+            @RequestParam("indirizzo") String indirizzo,
+            @RequestParam("descrizione") String descrizione,
+            @RequestParam("superficie") Double superficie,
+            @RequestParam("numeroBagni") int numeroBagni,
+            @RequestParam("numeroBalconi") int numeroBalconi,
+            @RequestParam("zona") String zona // Nuovo parametro
+    ) throws IOException {
+        Property property = propertyService.getPropertyById(id);
+        property.setTitolo(titolo);
+        property.setPrezzo(prezzo);
+        property.setTipo(tipo);
+        property.setIndirizzo(indirizzo);
+        property.setDescrizione(descrizione);
+        property.setSuperficie(superficie);
+        property.setNumeroBagni(numeroBagni);
+        property.setNumeroBalconi(numeroBalconi);
+        property.setZona(zona); // Aggiorna la zona
+
+        String imageUrl = cloudinaryService.uploadImage(file);
+        property.setImageUrl(imageUrl);
+
+        Property updatedProperty = propertyService.saveProperty(property);
+        return ResponseEntity.ok(updatedProperty);
+    }
+
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteProperty(@PathVariable Long id) {
+        propertyService.deleteProperty(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<Property>> searchProperties(
+            @RequestParam(required = false) Double prezzo,
+            @RequestParam(required = false) String titolo,
+            @RequestParam(required = false) PropertyType tipo,
+            @RequestParam(required = false) String indirizzo,
+            @RequestParam(required = false) String descrizione,
+            @RequestParam(required = false) String zona // Aggiunto il parametro zona
+    ) {
+        List<Property> properties = propertyService.searchProperties(prezzo, titolo, tipo, indirizzo, descrizione, zona);
+        return ResponseEntity.ok(properties);
+    }
+
+}
