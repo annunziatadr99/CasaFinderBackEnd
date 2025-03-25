@@ -1,3 +1,4 @@
+LINK di collegamento alla repository di CASAFINDER-FRONTEND: https://github.com/annunziatadr99/casafinder-frontend.git
 Introduzione progetto Casa Finder Back-end
 
 La motivazione principale per la realizzazione di questo progetto è creare un sistema completo per la gestione delle proprietà che sia sicuro, 
