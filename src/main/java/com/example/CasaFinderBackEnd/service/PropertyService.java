@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class PropertyService {
@@ -53,26 +54,18 @@ public class PropertyService {
         propertyRepository.deleteById(id);
     }
 
+    // Metodo per la ricerca combinata
     public List<Property> searchProperties(Double prezzo, String titolo, PropertyType tipo, String indirizzo, String descrizione, String zona) {
-        if (prezzo != null) {
-            return propertyRepository.findByPrezzo(prezzo);
-        }
-        if (titolo != null) {
-            return propertyRepository.findByTitoloContainingIgnoreCase(titolo);
-        }
-        if (tipo != null) {
-            return propertyRepository.findByTipo(tipo);
-        }
-        if (indirizzo != null) {
-            return propertyRepository.findByIndirizzoContainingIgnoreCase(indirizzo);
-        }
-        if (descrizione != null) {
-            return propertyRepository.findByDescrizioneContainingIgnoreCase(descrizione);
-        }
-        if (zona != null) { // Filtro per zona
-            return propertyRepository.findByZonaContainingIgnoreCase(zona);
-        }
-        return propertyRepository.findAll();
+        List<Property> allProperties = propertyRepository.findAll();
+
+        return allProperties.stream()
+                .filter(p -> prezzo == null || p.getPrezzo() <= prezzo)
+                .filter(p -> titolo == null || p.getTitolo().toLowerCase().contains(titolo.toLowerCase()))
+                .filter(p -> tipo == null || p.getTipo().equals(tipo))
+                .filter(p -> indirizzo == null || p.getIndirizzo().toLowerCase().contains(indirizzo.toLowerCase()))
+                .filter(p -> descrizione == null || p.getDescrizione().toLowerCase().contains(descrizione.toLowerCase()))
+                .filter(p -> zona == null || p.getZona().toLowerCase().contains(zona.toLowerCase()))
+                .collect(Collectors.toList());
     }
 
 }

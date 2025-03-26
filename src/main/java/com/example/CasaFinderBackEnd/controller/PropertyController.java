@@ -148,6 +148,7 @@ public class PropertyController {
         return ResponseEntity.ok().build();
     }
 
+    // Endpoint per ricerca combinata
     @GetMapping("/search")
     public ResponseEntity<List<Property>> searchProperties(
             @RequestParam(required = false) Double prezzo,
@@ -155,7 +156,7 @@ public class PropertyController {
             @RequestParam(required = false) PropertyType tipo,
             @RequestParam(required = false) String indirizzo,
             @RequestParam(required = false) String descrizione,
-            @RequestParam(required = false) String zona // Aggiunto il parametro zona
+            @RequestParam(required = false) String zona
     ) {
         List<Property> properties = propertyService.searchProperties(prezzo, titolo, tipo, indirizzo, descrizione, zona);
         return ResponseEntity.ok(properties);
