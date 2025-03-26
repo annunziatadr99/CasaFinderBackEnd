@@ -84,34 +84,62 @@ public class PropertyController {
     @PutMapping("/{id}")
     public ResponseEntity<Property> updateProperty(
             @PathVariable Long id,
-            @RequestParam("file") MultipartFile file,
-            @RequestParam("titolo") String titolo,
-            @RequestParam("prezzo") Double prezzo,
-            @RequestParam("tipo") PropertyType tipo,
-            @RequestParam("indirizzo") String indirizzo,
-            @RequestParam("descrizione") String descrizione,
-            @RequestParam("superficie") Double superficie,
-            @RequestParam("numeroBagni") int numeroBagni,
-            @RequestParam("numeroBalconi") int numeroBalconi,
-            @RequestParam("zona") String zona // Nuovo parametro
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "titolo", required = false) String titolo,
+            @RequestParam(value = "prezzo", required = false) Double prezzo,
+            @RequestParam(value = "tipo", required = false) PropertyType tipo,
+            @RequestParam(value = "indirizzo", required = false) String indirizzo,
+            @RequestParam(value = "descrizione", required = false) String descrizione,
+            @RequestParam(value = "superficie", required = false) Double superficie,
+            @RequestParam(value = "numeroBagni", required = false) Integer numeroBagni,
+            @RequestParam(value = "numeroBalconi", required = false) Integer numeroBalconi,
+            @RequestParam(value = "zona", required = false) String zona // Parametro opzionale
     ) throws IOException {
+        // Recupera l'annuncio esistente dal database
         Property property = propertyService.getPropertyById(id);
-        property.setTitolo(titolo);
-        property.setPrezzo(prezzo);
-        property.setTipo(tipo);
-        property.setIndirizzo(indirizzo);
-        property.setDescrizione(descrizione);
-        property.setSuperficie(superficie);
-        property.setNumeroBagni(numeroBagni);
-        property.setNumeroBalconi(numeroBalconi);
-        property.setZona(zona); // Aggiorna la zona
 
-        String imageUrl = cloudinaryService.uploadImage(file);
-        property.setImageUrl(imageUrl);
+        // Aggiorna solo i campi forniti nella richiesta
+        if (titolo != null) {
+            property.setTitolo(titolo);
+        }
+        if (prezzo != null) {
+            property.setPrezzo(prezzo);
+        }
+        if (tipo != null) {
+            property.setTipo(tipo);
+        }
+        if (indirizzo != null) {
+            property.setIndirizzo(indirizzo);
+        }
+        if (descrizione != null) {
+            property.setDescrizione(descrizione);
+        }
+        if (superficie != null) {
+            property.setSuperficie(superficie);
+        }
+        if (numeroBagni != null) {
+            property.setNumeroBagni(numeroBagni);
+        }
+        if (numeroBalconi != null) {
+            property.setNumeroBalconi(numeroBalconi);
+        }
+        if (zona != null) {
+            property.setZona(zona);
+        }
+
+
+        if (file != null && !file.isEmpty()) {
+            String imageUrl = cloudinaryService.uploadImage(file);
+            property.setImageUrl(imageUrl);
+        }
+
 
         Property updatedProperty = propertyService.saveProperty(property);
+
+
         return ResponseEntity.ok(updatedProperty);
     }
+
 
 
     @DeleteMapping("/{id}")

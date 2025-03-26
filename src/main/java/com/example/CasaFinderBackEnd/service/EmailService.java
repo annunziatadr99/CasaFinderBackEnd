@@ -1,52 +1,46 @@
 package com.example.CasaFinderBackEnd.service;
 
-
 import com.example.CasaFinderBackEnd.model.EmailLog;
 import com.example.CasaFinderBackEnd.repository.EmailLogRepository;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import jakarta.mail.internet.MimeMessage;
-import java.time.Instant;
 import java.util.Date;
 
 @Service
 public class EmailService {
 
     private final JavaMailSender mailSender;
-    private final EmailLogRepository emailLogRepository; // Iniettiamo il repository
 
-    public EmailService(JavaMailSender mailSender, EmailLogRepository emailLogRepository) {
+    public EmailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
-        this.emailLogRepository = emailLogRepository;
     }
 
-    public void sendEmail(String recipient, String subject, String content) {
+    public void sendEmail(String sender, String recipient, String subject, String content, EmailLogRepository emailLogRepository) {
         try {
             // Invio dell'email
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            helper.setTo(recipient);
-            helper.setSubject(subject);
-            helper.setText(content, true);
+            helper.setFrom(sender); // Mittente
+            helper.setTo(recipient); // Destinatario
+            helper.setSubject(subject); // Oggetto
+            helper.setText(content, true); // Contenuto HTML o testo
 
             mailSender.send(message);
-            System.out.println("Email inviata con successo!");
 
             // Salvataggio nel database
             EmailLog emailLog = new EmailLog();
-            emailLog.setRecipient(recipient);
-            emailLog.setSubject(subject);
-            emailLog.setContent(content);
-            emailLog.setSentAt(Date.from(Instant.now()));
+            emailLog.setSender(sender); // Mittente
+            emailLog.setRecipient(recipient); // Destinatario
+            emailLog.setSubject(subject); // Oggetto
+            emailLog.setContent(content); // Contenuto
+            emailLog.setSentAt(new Date()); // Data e ora
 
-            emailLogRepository.save(emailLog); // Salva l'email nel database
-            System.out.println("Email registrata nel database!");
+            emailLogRepository.save(emailLog); // Salva nel database
         } catch (Exception e) {
-            e.printStackTrace();
             throw new RuntimeException("Errore nell'invio dell'email: " + e.getMessage());
         }
     }
 }
-

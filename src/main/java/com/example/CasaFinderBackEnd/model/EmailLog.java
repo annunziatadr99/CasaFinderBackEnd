@@ -14,6 +14,9 @@ public class EmailLog {
     private Long id;
 
     @Column(nullable = false)
+    private String sender; // Mittente
+
+    @Column(nullable = false)
     private String recipient; // Email destinatario
 
     @Column(nullable = false)
