@@ -1,6 +1,5 @@
 package com.example.CasaFinderBackEnd.service;
 
-
 import com.example.CasaFinderBackEnd.enumerated.PropertyType;
 import com.example.CasaFinderBackEnd.exception.ResourceNotFoundException;
 import com.example.CasaFinderBackEnd.model.Property;
@@ -10,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,17 +22,41 @@ public class PropertyService {
     public List<Property> findByUserId(Long userId) {
         return propertyRepository.findByUserId(userId);
     }
+
     public Property saveProperty(Property property) {
+        // Se imageUrls è null, inizializzarlo con un array vuoto per evitare errori
+        if (property.getImageUrls() == null) {
+            property.setImageUrls(new ArrayList<>());
+        }
+
+        // Se imageUrl è presente ma imageUrls è vuoto, aggiungerlo a imageUrls
+        if (property.getImageUrl() != null && property.getImageUrls().isEmpty()) {
+            property.setImageUrls(List.of(property.getImageUrl()));
+        }
+
+        // Aggiorniamo anche imageUrl per retrocompatibilità
+        if (!property.getImageUrls().isEmpty()) {
+            property.setImageUrl(property.getImageUrls().get(0)); // Usa la prima immagine
+        }
+
         return propertyRepository.save(property);
     }
+
 
     public Page<Property> getAllProperties(Pageable pageable) {
         return propertyRepository.findAll(pageable);
     }
 
     public Property getPropertyById(Long id) {
-        return propertyRepository.findById(id)
+        Property property = propertyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Property not found with id " + id));
+
+        // Se la property ha solo imageUrl, convertiamola in un array per imageUrls
+        if (property.getImageUrls() == null || property.getImageUrls().isEmpty()) {
+            property.setImageUrls(List.of(property.getImageUrl()));
+        }
+
+        return property;
     }
 
     public Property updateProperty(Long id, Property propertyDetails) {
@@ -45,10 +69,17 @@ public class PropertyService {
         property.setSuperficie(propertyDetails.getSuperficie());
         property.setNumeroBagni(propertyDetails.getNumeroBagni());
         property.setNumeroBalconi(propertyDetails.getNumeroBalconi());
-        property.setImageUrl(propertyDetails.getImageUrl());
+        property.setZona(propertyDetails.getZona());
+
+        // Aggiorniamo le immagini
+        property.setImageUrls(propertyDetails.getImageUrls());
+
+        if (property.getImageUrls() != null && !property.getImageUrls().isEmpty()) {
+            property.setImageUrl(property.getImageUrls().get(0)); // Manteniamo retrocompatibilità
+        }
+
         return propertyRepository.save(property);
     }
-
 
     public void deleteProperty(Long id) {
         propertyRepository.deleteById(id);
@@ -67,5 +98,4 @@ public class PropertyService {
                 .filter(p -> zona == null || p.getZona().toLowerCase().contains(zona.toLowerCase()))
                 .collect(Collectors.toList());
     }
-
 }

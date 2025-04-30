@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -32,7 +33,7 @@ public class PropertyController {
 
     @PostMapping(consumes = {"multipart/form-data"})
     public ResponseEntity<Property> createProperty(
-            @RequestParam("file") MultipartFile file,
+            @RequestParam("files") List<MultipartFile> files,
             @RequestParam("userId") Long userId,
             @RequestParam("titolo") String titolo,
             @RequestParam("prezzo") Double prezzo,
@@ -42,7 +43,7 @@ public class PropertyController {
             @RequestParam("superficie") Double superficie,
             @RequestParam("numeroBagni") int numeroBagni,
             @RequestParam("numeroBalconi") int numeroBalconi,
-            @RequestParam("zona") String zona // Nuovo parametro
+            @RequestParam("zona") String zona
     ) throws IOException {
         try {
             User user = userService.getUserById(userId);
@@ -56,10 +57,20 @@ public class PropertyController {
             property.setSuperficie(superficie);
             property.setNumeroBagni(numeroBagni);
             property.setNumeroBalconi(numeroBalconi);
-            property.setZona(zona); // Setta la nuova zona
+            property.setZona(zona);
 
-            String imageUrl = cloudinaryService.uploadImage(file);
-            property.setImageUrl(imageUrl);
+            // Upload multiple images
+            List<String> imageUrls = new ArrayList<>();
+            for (MultipartFile file : files) {
+                String imageUrl = cloudinaryService.uploadImage(file);
+                imageUrls.add(imageUrl);
+            }
+            property.setImageUrls(imageUrls);
+
+            // Manteniamo compatibilità con imageUrl
+            if (!imageUrls.isEmpty()) {
+                property.setImageUrl(imageUrls.get(0));
+            }
 
             Property savedProperty = propertyService.saveProperty(property);
             return ResponseEntity.ok(savedProperty);
@@ -68,6 +79,7 @@ public class PropertyController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
+
 
     @GetMapping
     public ResponseEntity<Page<Property>> getAllProperties(Pageable pageable) {
@@ -84,7 +96,7 @@ public class PropertyController {
     @PutMapping("/{id}")
     public ResponseEntity<Property> updateProperty(
             @PathVariable Long id,
-            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "files", required = false) List<MultipartFile> files,
             @RequestParam(value = "titolo", required = false) String titolo,
             @RequestParam(value = "prezzo", required = false) Double prezzo,
             @RequestParam(value = "tipo", required = false) PropertyType tipo,
@@ -127,18 +139,26 @@ public class PropertyController {
             property.setZona(zona);
         }
 
+        // Gestione dell'upload multiplo di immagini
+        if (files != null && !files.isEmpty()) {
+            List<String> imageUrls = new ArrayList<>();
+            for (MultipartFile file : files) {
+                String imageUrl = cloudinaryService.uploadImage(file);
+                imageUrls.add(imageUrl);
+            }
+            property.setImageUrls(imageUrls);
 
-        if (file != null && !file.isEmpty()) {
-            String imageUrl = cloudinaryService.uploadImage(file);
-            property.setImageUrl(imageUrl);
+            if (!imageUrls.isEmpty()) {
+                property.setImageUrl(imageUrls.get(0)); // Mantiene la retrocompatibilità
+            }
         }
 
-
+        // Salva le modifiche
         Property updatedProperty = propertyService.saveProperty(property);
-
 
         return ResponseEntity.ok(updatedProperty);
     }
+
 
 
 

@@ -1,6 +1,5 @@
 package com.example.CasaFinderBackEnd.model;
 
-
 import com.example.CasaFinderBackEnd.enumerated.PropertyType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -8,6 +7,7 @@ import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.util.List;
 
 @Data
 @Entity
@@ -35,11 +35,17 @@ public class Property {
     private String indirizzo;
 
     @NotNull
-    @Size(min = 10, max = 500)
+    @Size(min = 10, max = 5000)
     private String descrizione;
 
-    @NotNull
+    // Manteniamo imageUrl come opzionale per la retrocompatibilità
+    @Column(nullable = true)
     private String imageUrl;
+
+    // Nuova colonna obbligatoria per gestire più immagini
+    @NotNull
+    @ElementCollection
+    private List<String> imageUrls;
 
     @NotNull
     private double superficie;
@@ -54,8 +60,7 @@ public class Property {
     @Size(min = 3, max = 50)
     private String zona;
 
-    @ManyToOne(fetch = FetchType.EAGER) // EAGER per caricare automaticamente l'utente
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
-
 }
