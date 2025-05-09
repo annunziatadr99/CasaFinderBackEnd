@@ -1,6 +1,5 @@
 package com.example.CasaFinderBackEnd.security.jwt;
 
-
 import com.example.CasaFinderBackEnd.security.services.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -32,13 +31,21 @@ public class AuthTokenFilter extends OncePerRequestFilter {
             String jwt = parseJwt(request);
             if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
                 String username = jwtUtils.getUserNameFromJwtToken(jwt);
+                String role = jwtUtils.getUserRoleFromJwtToken(jwt); // 🔥 Recupera il ruolo dal token JWT
 
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                // 🔥 Debug per verificare se il ruolo è `ADMIN`
+                if ("ADMIN".equals(role)) {
+                    System.out.println("Autenticazione ADMIN completata con successo.");
+                }
             }
+
         } catch (Exception e) {
             System.err.println("Cannot set user authentication: " + e.getMessage());
         }

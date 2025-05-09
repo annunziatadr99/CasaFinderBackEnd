@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/emails")
+@RequestMapping("/api/email")
 public class EmailController {
 
     @Autowired
@@ -46,8 +46,7 @@ public class EmailController {
                     senderEmail, // Mittente
                     emailRequest.getRecipient(), // Destinatario
                     emailRequest.getSubject(), // Oggetto
-                    emailRequest.getContent(), // Contenuto
-                    emailLogRepository
+                    emailRequest.getContent() // Contenuto
             );
 
             return ResponseEntity.ok("Email inviata con successo!");

@@ -1,6 +1,6 @@
 package com.example.CasaFinderBackEnd.security.services;
 
-
+import com.example.CasaFinderBackEnd.model.Role;
 import com.example.CasaFinderBackEnd.model.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.security.core.GrantedAuthority;
@@ -18,14 +18,16 @@ public class UserDetailsImpl implements UserDetails {
     private String email;
     @JsonIgnore
     private String password;
-    private String nome;  // Aggiungi il campo nome
+    private String nome;
+    private Role role;  // Aggiunto il campo ruolo
 
-    public UserDetailsImpl(Long id, String username, String email, String password, String nome) {
+    public UserDetailsImpl(Long id, String username, String email, String password, String nome, Role role) {
         this.id = id;
         this.username = username;
         this.email = email;
         this.password = password;
-        this.nome = nome;  // Aggiungi il campo nome
+        this.nome = nome;
+        this.role = role;  // Aggiunto il ruolo
     }
 
     public static UserDetailsImpl build(User user) {
@@ -34,13 +36,16 @@ public class UserDetailsImpl implements UserDetails {
                 user.getUsername(),
                 user.getEmail(),
                 user.getPassword(),
-                user.getNome());  // Aggiungi il campo nome
+                user.getNome(),
+                user.getRole() // Assegna il ruolo
+        );
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of();  // Nessun ruolo specifico, quindi restituiamo un elenco vuoto
+        return List.of(() -> role.name()); // 🔥 Passiamo il ruolo come autorità
     }
+
 
     public Long getId() {
         return id;
@@ -48,6 +53,10 @@ public class UserDetailsImpl implements UserDetails {
 
     public String getEmail() {
         return email;
+    }
+
+    public Role getRole() { // Getter per il ruolo
+        return role;
     }
 
     @Override
@@ -61,7 +70,7 @@ public class UserDetailsImpl implements UserDetails {
     }
 
     public String getNome() {
-        return nome;  // Aggiungi il metodo getter per nome
+        return nome;
     }
 
     @Override
@@ -97,4 +106,3 @@ public class UserDetailsImpl implements UserDetails {
         return Objects.hash(id);
     }
 }
-

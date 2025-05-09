@@ -15,6 +15,12 @@ public class AuthEntryPointJwt implements AuthenticationEntryPoint {
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException)
             throws IOException {
         System.err.println("Unauthorized error: " + authException.getMessage());
+
+        // 🔥 Gestione specifica per gli ADMIN
+        if (request.getRequestURI().startsWith("/api/admin")) {
+            System.err.println("Tentativo di accesso non autorizzato agli endpoint ADMIN.");
+        }
+
         response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Error: Unauthorized");
     }
 }

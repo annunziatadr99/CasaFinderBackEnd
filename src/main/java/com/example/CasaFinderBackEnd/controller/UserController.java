@@ -3,6 +3,7 @@ package com.example.CasaFinderBackEnd.controller;
 import com.example.CasaFinderBackEnd.exception.ResourceNotFoundException;
 import com.example.CasaFinderBackEnd.model.Favorite;
 import com.example.CasaFinderBackEnd.model.Property;
+import com.example.CasaFinderBackEnd.model.Role;
 import com.example.CasaFinderBackEnd.model.User;
 import com.example.CasaFinderBackEnd.payload.request.LoginRequest;
 import com.example.CasaFinderBackEnd.payload.request.RegisterRequest;
@@ -63,15 +64,17 @@ public class UserController {
 
             // Recupera i dettagli dell'utente autenticato
             UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            User user = userService.getUserById(userDetails.getId()); // Recupera l'utente dal database
             System.out.println("Authentication successful for user: " + userDetails.getUsername());
 
-            // Ritorna il JWT e l'id dell'utente
+            // Ritorna il JWT e l'id dell'utente, includendo il ruolo
             return ResponseEntity.ok(new JwtResponse(
                     jwt,
-                    userDetails.getId(), // Restituisce userId
-                    userDetails.getUsername(),
-                    userDetails.getEmail(),
-                    userDetails.getNome()
+                    user.getId(), // Restituisce userId
+                    user.getUsername(),
+                    user.getEmail(),
+                    user.getNome(),
+                    user.getRole().name() // Aggiunge il ruolo nella risposta
             ));
         } catch (Exception e) {
             e.printStackTrace();
@@ -79,6 +82,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponse("Credenziali non valide o errore server."));
         }
     }
+
 
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser(Authentication authentication) {
@@ -111,9 +115,10 @@ public class UserController {
             return ResponseEntity.badRequest().body(new MessageResponse("Error: Email is already in use!"));
         }
 
-        // Crea nuovo account utente
+// Crea nuovo account utente
         User user = new User(signUpRequest.getNome(), signUpRequest.getCognome(), signUpRequest.getTelefono(),
-                signUpRequest.getUsername(), encoder.encode(signUpRequest.getPassword()), signUpRequest.getEmail());
+                signUpRequest.getUsername(), encoder.encode(signUpRequest.getPassword()), signUpRequest.getEmail(), Role.USER);
+
 
         userService.saveUser(user);
 

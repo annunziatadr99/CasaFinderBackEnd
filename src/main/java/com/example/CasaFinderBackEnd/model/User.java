@@ -8,8 +8,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-
-
 @Data
 @Entity
 @Table(name = "users")
@@ -47,13 +45,17 @@ public class User {
     @Column(unique = true)
     private String email;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
 
-    public User(String nome, String cognome, String telefono, String username, String password, String email) {
+    public User(String nome, String cognome, String telefono, String username, String password, String email, Role role) {
         this.nome = nome;
         this.cognome = cognome;
         this.telefono = telefono;
         this.username = username;
         this.password = password;
         this.email = email;
+        this.role = role;
     }
 }

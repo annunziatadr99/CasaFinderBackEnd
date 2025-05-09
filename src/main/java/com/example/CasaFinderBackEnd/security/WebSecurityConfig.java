@@ -1,6 +1,5 @@
 package com.example.CasaFinderBackEnd.security;
 
-
 import com.example.CasaFinderBackEnd.security.jwt.AuthEntryPointJwt;
 import com.example.CasaFinderBackEnd.security.jwt.AuthTokenFilter;
 import com.example.CasaFinderBackEnd.security.services.UserDetailsServiceImpl;
@@ -24,33 +23,31 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class WebSecurityConfig {
 
     @Autowired
-    UserDetailsServiceImpl userDetailsService;
+    private UserDetailsServiceImpl userDetailsService;
 
     @Autowired
-    private AuthEntryPointJwt gestoreNOAuthorization;
+    private AuthEntryPointJwt unauthorizedHandler;
 
     @Autowired
-    private AuthTokenFilter filtroAuthToken;
+    private AuthTokenFilter authTokenFilter;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.cors().and().csrf(csrf -> csrf.disable())
-                .exceptionHandling(exception -> exception.authenticationEntryPoint(gestoreNOAuthorization))
+        http.cors().and().csrf().disable()
+                .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/api/user/registrazione", // Endpoint per la registrazione
-                                "/api/user/login",        // Endpoint per il login
-                                "/api/properties/search", // Endpoint per la ricerca delle proprietà
-                                "/api/properties/{id}"    // Endpoint per recuperare un annuncio specifico
-                        ).permitAll()
-                        .requestMatchers("/api/emails/**").authenticated() // Nuovo: autorizzazione endpoint per le email
+                        .requestMatchers("/api/user/registrazione", "/api/user/login").permitAll()
+                        .requestMatchers("/api/properties/search", "/api/properties/{id}").permitAll()
+                        .requestMatchers("/api/admin/register-admin").permitAll()
+                        .requestMatchers("/api/admin/**").authenticated() // 🔥 Permette l'accesso agli ADMIN autenticati
                         .anyRequest().authenticated());
 
-        http.addFilterBefore(filtroAuthToken, UsernamePasswordAuthenticationFilter.class);
 
+        http.addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {
